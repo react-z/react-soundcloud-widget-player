@@ -1,0 +1,60 @@
+{
+  "name": "react-soundcloud-widget-player",
+  "version": "1.1.0",
+  "description": "A simple SoundCloud Widget player.",
+  "main": "lib/Player.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StevenIseki/react-soundcloud-widget-player.git"
+  },
+  "author": "Steven Iseki <stevenisekimartin@gmail.com>",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^16.0.0"
+  },
+  "dependencies": {
+    "prop-types": "^15.6.0",
+    "styled-components": "^4.1.3"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "7.3.3",
+    "@babel/preset-env": "7.3.1",
+    "@babel/preset-react": "7.0.0",
+    "babel-loader": "8.0.5",
+    "babel-tape-runner": "^3.0.0",
+    "enzyme": "3.9.0",
+    "enzyme-adapter-react-16": "^1.9.1",
+    "expect": "24.1.0",
+    "html-webpack-plugin": "3.2.0",
+    "jsdom": "13.2.0",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
+    "tape": "4.10.1",
+    "webpack": "4.29.4",
+    "webpack-cli": "3.2.3",
+    "webpack-dev-server": "3.1.14"
+  },
+  "scripts": {
+    "build": "babel src --out-dir lib",
+    "dev": "webpack-dev-server --mode=development --port 3000 --inline --hot --config example/webpack.config",
+    "test": "babel-tape-runner test/*.js"
+  },
+  "keywords": [
+    "react",
+    "react-component",
+    "soundcloud",
+    "react-soundcloud",
+    "react soundcloud",
+    "react-soundcloud-player",
+    "react-soundcloud-widget-player",
+    "react soundcloud player",
+    "react soundcloud widget player",
+    "soundcloud widget player",
+    "soundcloud widget api",
+    "audio player",
+    "soundcloud player",
+    "react sound cloud",
+    "react sound cloud player"
+  ]
+}
