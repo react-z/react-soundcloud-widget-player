@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/react-soundcloud-widget-player.svg)](https://badge.fury.io/js/react-soundcloud-widget-player)
 
-![](https://raw.githubusercontent.com/StevenIseki/react-soundcloud-widget-player/master/example/screenshot.gif)
+![](https://raw.githubusercontent.com/react-z/react-soundcloud-widget-player/master/example/screenshot.gif)
 
 react-soundcloud-widget-player is a simple SoundCloud player using the [Widget API](https://developers.soundcloud.com/docs/api/html5-widget)
 
