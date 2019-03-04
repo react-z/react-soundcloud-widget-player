@@ -1,4 +1,4 @@
-import Player from '../lib/Player' // 'react-soundcloud-widget-player'
+import Player from '../src/Player' // 'react-soundcloud-widget-player'
 import ReactDOM from 'react-dom'
 import React, { Component } from 'react'
 
@@ -7,9 +7,8 @@ class TestComponent extends Component {
     return (
       <div>
         <Player
-          client_id="c5a171200f3a0a73a523bba14a1e0a29"
-          audio_id="193179003"
-          title="Easyfun - Fanta"
+          title='EASYFUN - Be Your USA feat. Iiris'
+          audioUrl="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/449016357"
         />
       </div>
     )

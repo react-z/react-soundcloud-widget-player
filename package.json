@@ -1,6 +1,6 @@
 {
   "name": "react-soundcloud-widget-player",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "description": "A simple SoundCloud Widget player.",
   "main": "lib/Player.js",
   "repository": {
@@ -19,6 +19,7 @@
   "devDependencies": {
     "@babel/cli": "^7.2.3",
     "@babel/core": "7.3.3",
+    "@babel/plugin-proposal-class-properties": "7.3.4",
     "@babel/preset-env": "7.3.1",
     "@babel/preset-react": "7.0.0",
     "babel-loader": "8.0.5",

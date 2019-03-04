@@ -12,6 +12,12 @@ react-soundcloud-widget-player is a simple SoundCloud player using the [Widget A
 
 ## Usage
 
+Ensure you include the soundcloud widget player API
+
+`<script type="text/javascript" src="https://w.soundcloud.com/player/api.js"></script>`
+
+Then init your player
+
 ```javascript
 import Player from 'react-soundcloud-widget-player'
 import ReactDOM from 'react-dom'
@@ -22,9 +28,8 @@ class TestComponent extends Component {
     return (
       <div>
         <Player
-          client_id="c5a171200f3a0a73a523bba14a1e0a29"
-          audio_id="193179003"
-          title="Easyfun - Fanta"
+          title='EASYFUN - Be Your USA feat. Iiris'
+          audioUrl="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/449016357"
         />
       </div>
     )

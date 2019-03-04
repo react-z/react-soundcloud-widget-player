@@ -15,25 +15,35 @@ import Forward from './icons/Forward'
 export default class Player extends Component {
   static get propTypes() {
     return {
-      audio_id: PropTypes.string.isRequired,
-      audio_secret_token: PropTypes.string,
-      client_id: PropTypes.string.isRequired,
-      title: PropTypes.string
+      audioUrl: PropTypes.string.isRequired
     }
   }
 
   constructor(props) {
     super(props)
     this.state = {
+      soundcloudAvailable: false,
+      played: false,
       playing: false,
-      audioPlayer: null,
-      percent_remains: 100,
-      percent_progress_remains: 100,
-      duration: '0:00',
-      current_time: '0:00'
+      paused: false,
+      currentTime: 0,
+      duration: 0
     }
   }
 
+  interval = null
+  $embedPlayer = null
+
+  componentDidMount() {
+    this.interval = setInterval(() => {
+      if (window.SC && window.SC.Widget) {
+        clearInterval(this.interval)
+        this.initializePlayer()
+      }
+    }, 1000)
+  }
+
+  /*
   componentDidMount() {
     this.setState(
       { audioPlayer: ReactDOM.findDOMNode(this.refs.audio) },
@@ -46,76 +56,105 @@ export default class Player extends Component {
         }
       }
     )
-  }
+  } */
 
-  togglePlay() {
-    const { playing, audioPlayer } = this.state
-    this.setState({ playing: !playing, showAudioPlayer: true }, () => {
-      if (audioPlayer.paused) {
-        audioPlayer.play()
-      }
-      if (!this.state.playing) {
-        if (!audioPlayer.buffered.length) return
-        audioPlayer.pause()
-      }
+  initializePlayer() {
+    this.setState({ soundcloudAvailable: true }, () => {
+      const widgetIframe = document.getElementById('sc-widget')
+      widgetIframe.src = widgetIframe.dataset.src
+      this.$embedPlayer = window.SC.Widget(widgetIframe)
+
+      this.$player = ReactDOM.findDOMNode(this.refs.player)
+      this.$player.addEventListener('play', e => this.handlePlay(e))
+      this.$player.addEventListener('pause', e => this.handlePause(e))
+
+      this.$embedPlayer.bind(window.SC.Widget.Events.PLAY, () => {
+        this.$embedPlayer.getDuration(duration => this.setDuration(duration))
+      })
+
+      this.$embedPlayer.bind(window.SC.Widget.Events.PLAY_PROGRESS, () => {
+        this.$embedPlayer.getPosition(position => this.setTime(position))
+      })
+
+      this.$embedPlayer.bind(window.SC.Widget.Events.FINISH, () =>
+        this.handleEnded()
+      )
     })
   }
 
-  timeUpdated() {
-    const { audioPlayer } = this.state
-    if (audioPlayer == undefined) {
-      return
-    }
-    let percent = (audioPlayer.currentTime / audioPlayer.duration) * 100
-    this.setState({ current_time: FormatTime(audioPlayer.currentTime) })
-    this.setState({ duration: FormatTime(audioPlayer.duration) })
-    this.setState({ percent_remains: 100 - percent })
+  play() {
+    this.$embedPlayer.play()
+    this.handlePlay()
   }
 
-  progressUpdated() {
-    const { audioPlayer } = this.state
-    if (audioPlayer == undefined) return
-    if (!audioPlayer.buffered.length) return
-    var bufferedEnd = audioPlayer.buffered.end(audioPlayer.buffered.length - 1)
-    if (audioPlayer.duration > 0) {
-      let percent_remains = (bufferedEnd / audioPlayer.duration) * 100
-      this.setState({ percent_progress_remains: 100 - percent_remains })
-    }
+  pause() {
+    this.$embedPlayer.pause()
+    this.handlePause()
   }
 
-  positionChange(e) {
-    const { audioPlayer } = this.state
+  seek(time) {
+    this.$embedPlayer.seekTo(this.getmilliSeconds(time))
+  }
+
+  getSeconds(ms) {
+    return ms / 1000
+  }
+
+  getmilliSeconds(s) {
+    return s * 1000
+  }
+
+  setTime(time) {
+    this.setState({ currentTime: this.getSeconds(time) })
+  }
+
+  setDuration(duration) {
+    this.setState({ duration: this.getSeconds(duration) })
+  }
+
+  handleClickPlay(e) {
+    e.preventDefault()
+    this.play()
+  }
+
+  handleClickBack(e) {
+    e.preventDefault()
+    this.seek(Math.max(this.state.currentTime - 30, 0))
+  }
+
+  handleClickForward(e) {
+    e.preventDefault()
+    this.seek(Math.max(this.state.currentTime + 30, 0))
+  }
+
+  handleClickPause(e) {
+    e.preventDefault()
+    this.pause()
+  }
+
+  handleClickProgress(e) {
     let elem = ReactDOM.findDOMNode(this.refs.progress)
     let elemRect = elem.getClientRects()
-    let elemLeft = elemRect[0].left
     let elemWidth = elemRect[0].width
-    let clickPositionLeft = e.pageX
-    let percent_remains =
-      100 - ((clickPositionLeft - elemLeft) / elemWidth) * 100
-    let newTime =
-      audioPlayer.duration - audioPlayer.duration * (percent_remains / 100)
-    audioPlayer.currentTime = Math.floor(newTime)
-    setTimeout(() => {
-      if (audioPlayer.paused) {
-        this.togglePlay()
-      }
-    }, 1000)
-  }
 
-  forward() {
-    const { audioPlayer } = this.state
-    let newTime = audioPlayer.currentTime + 30
-    if (newTime < audioPlayer.duration) {
-      audioPlayer.currentTime = Math.floor(newTime)
+    if (this.state.duration) {
+      const x = e.pageX - e.currentTarget.offsetLeft
+      this.seek((x / elemWidth) * this.state.duration)
+    } else {
+      this.play()
     }
   }
 
-  replay() {
-    const { audioPlayer } = this.state
-    let newTime = audioPlayer.currentTime - 30
-    if (newTime > 0) {
-      audioPlayer.currentTime = Math.floor(newTime)
-    }
+  handlePlay() {
+    this.setState({ playing: true, paused: false, played: true })
+  }
+
+  handlePause() {
+    this.setState({ playing: false, paused: true })
+  }
+
+  handleEnded() {
+    this.setState({ playing: false, paused: false })
   }
 
   renderPlayerIcons() {
@@ -123,11 +162,11 @@ export default class Player extends Component {
 
     let skipButtons = (
       <span>
-        <PlayerControlIcon onClick={this.forward.bind(this)}>
+        <PlayerControlIcon onClick={this.handleClickForward.bind(this)}>
           <Forward />
         </PlayerControlIcon>
-        <PlayerControlIcon onClick={this.replay.bind(this)}>
-          <Replay onClick={this.replay.bind(this)} />
+        <PlayerControlIcon onClick={this.handleClickBack.bind(this)}>
+          <Replay />
         </PlayerControlIcon>
       </span>
     )
@@ -135,7 +174,7 @@ export default class Player extends Component {
     if (playing) {
       return (
         <div>
-          <PlayerControlIcon onClick={this.togglePlay.bind(this)}>
+          <PlayerControlIcon onClick={this.handleClickPause.bind(this)}>
             <Pause />
           </PlayerControlIcon>
           {skipButtons}
@@ -145,7 +184,7 @@ export default class Player extends Component {
 
     return (
       <div>
-        <PlayerControlIcon onClick={this.togglePlay.bind(this)}>
+        <PlayerControlIcon onClick={this.handleClickPlay.bind(this)}>
           <Play />
         </PlayerControlIcon>
         {skipButtons}
@@ -154,40 +193,42 @@ export default class Player extends Component {
   }
 
   render() {
-    const { audio_id, audio_secret_token, title, client_id } = this.props
-    const {
-      percent_remains,
-      percent_progress_remains,
-      duration,
-      current_time
-    } = this.state
-    let streamUrl = `https://api.soundcloud.com/tracks/${audio_id}/stream?client_id=${client_id}&secret_token=${audio_secret_token}`
+    const { soundcloudAvailable, currentTime, duration } = this.state
+    const { audioUrl, title } = this.props
 
-    let time_remains = {
-      transform: `translateX(-${percent_remains.toString()}%)`
+    if (!audioUrl) {
+      return null
     }
-    let progress_remains = {
-      transform: `translateX(-${percent_progress_remains.toString()}%)`
-    }
+
+    const time_remains = duration > 0 ? `${(currentTime / duration) * 100}%` : 0
 
     return (
-      <PlayerWrapper>
-        <audio id="audio" preload="none" ref="audio" src={streamUrl} />
-        <PlayerControl>{this.renderPlayerIcons()}</PlayerControl>
+      <PlayerWrapper ref="player">
+        <Iframe id="sc-widget" allow="autoplay" src="" data-src={audioUrl} />
 
-        <PlayerDisplay onClick={this.positionChange.bind(this)}>
+        {soundcloudAvailable && (
           <div>
-            <h4>{title}</h4>
+            <PlayerControl>{this.renderPlayerIcons()}</PlayerControl>
+
+            <PlayerDisplay>
+              <div>
+                <h4>{title}</h4>
+              </div>
+              <PlayerProgress>
+                <PlayerProgressTime>
+                  {FormatTime(this.state.currentTime)}
+                </PlayerProgressTime>
+                <PlayerProgressBar
+                  ref="progress"
+                  onClick={this.handleClickProgress.bind(this)}
+                >
+                  <PlayerTimeRemains style={{ width: time_remains }} />
+                </PlayerProgressBar>
+                <PlayerProgressTime>{FormatTime(duration)}</PlayerProgressTime>
+              </PlayerProgress>
+            </PlayerDisplay>
           </div>
-          <PlayerProgress>
-            <PlayerProgressTime>{current_time}</PlayerProgressTime>
-            <PlayerProgressBar ref="progress">
-              <PlayerProgressRemains style={progress_remains} />
-              <PlayerTimeRemains style={time_remains} />
-            </PlayerProgressBar>
-            <PlayerProgressTime>{duration}</PlayerProgressTime>
-          </PlayerProgress>
-        </PlayerDisplay>
+        )}
       </PlayerWrapper>
     )
   }
@@ -207,6 +248,13 @@ const PlayerWrapper = styled.div`
   border-color: #a2a2a2;
   background: white;
   z-index: 10;
+`
+
+const Iframe = styled.iframe`
+  display: none;
+  max-width: 10rem;
+  opacity: 0;
+  position: absolute;
 `
 
 const PlayerControl = styled.div`
@@ -274,15 +322,4 @@ const PlayerTimeRemains = styled.span`
   top: 0;
   background: #f50;
   display: block;
-`
-
-const PlayerProgressRemains = styled.span`
-  transition: transform 0.2s;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  background: #f50;
-  display: block;
-  background: #ccc;
 `
